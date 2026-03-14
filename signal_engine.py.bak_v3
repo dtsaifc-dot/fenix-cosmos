@@ -1,0 +1,160 @@
+import math
+from datetime import datetime, timezone, timedelta
+
+# Эти параметры должны быть в твоем файле config.py
+try:
+    from config import NO_TRADE_THRESHOLD, BAD_SIGNAL_THRESHOLD
+except ImportError:
+    # Запасные значения, если конфиг не подцепится
+    NO_TRADE_THRESHOLD = 55.0
+    BAD_SIGNAL_THRESHOLD = 65.0
+
+def current_5m_open(now=None):
+    now = now or datetime.now(timezone.utc)
+    minute_bucket = (now.minute // 5) * 5
+    return now.replace(minute=minute_bucket, second=0, microsecond=0)
+
+def next_5m_open(now=None):
+    return current_5m_open(now) + timedelta(minutes=5)
+
+def seconds_to_next_5m(now=None):
+    now = now or datetime.now(timezone.utc)
+    nxt = next_5m_open(now)
+    return max(0.0, (nxt - now).total_seconds())
+
+def phase_name(now=None, hide_sec=15, lock_sec=8):
+    sec = seconds_to_next_5m(now)
+    if sec > hide_sec:
+        return "LIVE"
+    if hide_sec >= sec > lock_sec:
+        return "PREPARE"
+    return "LOCK"
+
+def should_lock_signal(now=None, lead_sec=8):
+    return seconds_to_next_5m(now) <= lead_sec
+
+def sigmoid_conf(score):
+    # Плавная шкала уверенности
+    x = min(25.0, max(-25.0, score / 6.0))
+    try:
+        p_up = 1.0 / (1.0 + math.exp(-x))
+    except OverflowError:
+        p_up = 1.0 if x > 0 else 0.0
+    p_down = 1.0 - p_up
+    confidence = max(p_up, p_down) * 100.0
+    return p_up * 100.0, p_down * 100.0, confidence
+
+def _edge_from_window(w):
+    if not w: return 0.0
+    flow_edge = (w.get("buy_pct", 50.0) - 50.0) * 0.55
+    delta_edge = w.get("delta_ratio", 0.0) * 30.0
+    slope_edge = w.get("slope", 0.0) * 4.0
+    burst_edge = (min(w.get("burst_ratio", 1.0), 4.0) - 1.0) * 1.8
+    streak_edge = w.get("streak_bias", 0.0) * 0.6
+    return flow_edge + delta_edge + slope_edge + burst_edge + streak_edge
+
+def build_signal(features: dict):
+    # Безопасное извлечение окон
+    w30 = features.get("w30", {})
+    w10 = features.get("w10", {})
+    w3 = features.get("w3", {})
+
+    s30 = _edge_from_window(w30) * 0.35
+    s10 = _edge_from_window(w10) * 0.40
+    s3 = _edge_from_window(w3) * 0.25
+
+    depth_edge = features.get("imbalance", 0.0) * 10.0
+    micro_edge = features.get("micro_bias_bps", 0.0) * 0.8
+
+    score = s30 + s10 + s3 + depth_edge + micro_edge
+
+    # penalties
+    penalties = 0.0
+    if features.get("dead_depth"):
+        penalties += 3.0
+    if features.get("regime_live") == "NOISY":
+        penalties += 2.0
+
+    # conflict penalty
+    w30_dir = 1 if w30.get("buy_pct", 50.0) >= 50 else -1
+    w10_dir = 1 if w10.get("buy_pct", 50.0) >= 50 else -1
+    w3_dir = 1 if w3.get("buy_pct", 50.0) >= 50 else -1
+    unique_dirs = len({w30_dir, w10_dir, w3_dir})
+    if unique_dirs > 1:
+        penalties += 2.0
+
+    divergence = features.get("divergence")
+    if divergence == "bullish":
+        score += 2.5
+    elif divergence == "bearish":
+        score -= 2.5
+
+    score_after = score - penalties if score >= 0 else score + penalties
+    direction = "UP" if score_after >= 0 else "DOWN"
+
+    p_up, p_down, confidence = sigmoid_conf(score_after)
+    regime = features.get("regime_live", "UNKNOWN")
+
+    if confidence < NO_TRADE_THRESHOLD:
+        status = "NO TRADE"
+        display_signal = "NO TRADE"
+    elif regime == "FLAT" and confidence < BAD_SIGNAL_THRESHOLD:
+        status = "NO TRADE"
+        display_signal = "NO TRADE"
+    elif regime == "FLAT":
+        status = "BAD SIGNAL"
+        display_signal = direction
+    elif confidence < BAD_SIGNAL_THRESHOLD:
+        status = "BAD SIGNAL"
+        display_signal = direction
+    else:
+        status = "GOOD SIGNAL"
+        display_signal = direction
+
+    reasons = []
+    
+    w10_buy = w10.get("buy_pct", 50.0)
+    w10_sell = w10.get("sell_pct", 50.0)
+    if w10_buy > 56:
+        reasons.append(f"10s flow bullish ({w10_buy}% buy)")
+    elif w10_sell > 56:
+        reasons.append(f"10s flow bearish ({w10_sell}% sell)")
+
+    w3_burst = w3.get("burst_ratio", 1.0)
+    if w3_burst > 1.8:
+        reasons.append(f"trade burst x{w3_burst:.2f}")
+
+    imbalance = features.get("imbalance", 0.0)
+    if abs(imbalance) > 0.12:
+        reasons.append(f"depth imbalance {imbalance:+.3f}")
+
+    micro_bps = features.get("micro_bias_bps", 0.0)
+    if abs(micro_bps) > 0.8:
+        reasons.append(f"microprice drift {micro_bps:+.2f} bps")
+
+    if divergence:
+        reasons.append(f"{divergence} divergence")
+
+    if regime == "FLAT":
+        reasons.append("market regime: flat")
+    elif regime == "NOISY":
+        reasons.append("market regime: noisy")
+    else:
+        reasons.append(f"market regime: {regime.lower()}")
+
+    if penalties > 0:
+        reasons.append(f"confidence penalty {penalties:.1f}")
+
+    return {
+        "display_signal": display_signal,
+        "direction": direction,
+        "status": status,
+        "regime": regime,
+        "confidence": round(confidence, 1),
+        "score": round(score_after, 2),
+        "p_up": round(p_up, 1),
+        "p_down": round(p_down, 1),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "target_open_utc": next_5m_open().isoformat(),
+        "reasons": reasons[:6],
+    }

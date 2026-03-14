@@ -1,0 +1,190 @@
+import math
+from datetime import datetime, timezone, timedelta
+
+# Параметры из config.py
+try:
+    from config import NO_TRADE_THRESHOLD, BAD_SIGNAL_THRESHOLD
+except ImportError:
+    NO_TRADE_THRESHOLD = 55.0
+    BAD_SIGNAL_THRESHOLD = 65.0
+
+def current_5m_open(now=None):
+    now = now or datetime.now(timezone.utc)
+    minute_bucket = (now.minute // 5) * 5
+    return now.replace(minute=minute_bucket, second=0, microsecond=0)
+
+def next_5m_open(now=None):
+    return current_5m_open(now) + timedelta(minutes=5)
+
+def seconds_to_next_5m(now=None):
+    now = now or datetime.now(timezone.utc)
+    nxt = next_5m_open(now)
+    return max(0.0, (nxt - now).total_seconds())
+
+def phase_name(now=None, hide_sec=15, lock_sec=8):
+    sec = seconds_to_next_5m(now)
+    if sec > hide_sec:
+        return "LIVE"
+    if hide_sec >= sec > lock_sec:
+        return "PREPARE"
+    return "LOCK"
+
+def should_lock_signal(now=None, lead_sec=8):
+    return seconds_to_next_5m(now) <= lead_sec
+
+def sigmoid_conf(score: float):
+    # Ограничение x для предотвращения OverflowError в math.exp
+    x = min(25.0, max(-25.0, score / 6.0))
+    try:
+        p_up = 1.0 / (1.0 + math.exp(-x))
+    except OverflowError:
+        p_up = 1.0 if x > 0 else 0.0
+    p_down = 1.0 - p_up
+    confidence = max(p_up, p_down) * 100.0
+    return p_up * 100.0, p_down * 100.0, confidence
+
+def _edge_from_window(w: dict) -> float:
+    if not w: return 0.0
+    flow_edge = (w.get("buy_pct", 50.0) - 50.0) * 0.55
+    delta_edge = w.get("delta_ratio", 0.0) * 30.0
+    slope_edge = w.get("slope", 0.0) * 4.0
+    burst_edge = (min(w.get("burst_ratio", 1.0), 4.0) - 1.0) * 1.8
+    streak_edge = w.get("streak_bias", 0.0) * 0.6
+    return flow_edge + delta_edge + slope_edge + burst_edge + streak_edge
+
+def build_signal(features: dict) -> dict:
+    # Базовые окна
+    s30 = _edge_from_window(features.get("w30", {})) * 0.30
+    s10 = _edge_from_window(features.get("w10", {})) * 0.35
+    s3 = _edge_from_window(features.get("w3", {})) * 0.20
+
+    # Глубина и микропрайс
+    depth_edge = features.get("imbalance", 0.0) * 10.0
+    micro_edge = features.get("micro_bias_bps", 0.0) * 0.9
+    momentum_edge = features.get("flow_momentum_num", 0.0) * 0.45 # Используем числовое значение
+
+    # Агрессия
+    aggression_edge = (features.get("aggr_buy_pct", 50.0) - 50.0) * 0.18
+
+    # Стенки (Walls)
+    wall_edge = 0.0
+    if (features.get("bid_wall_active") and 
+        features.get("bid_wall_dist_bps") is not None and 
+        abs(features["bid_wall_dist_bps"]) < 18):
+        wall_edge += 2.2
+    if (features.get("ask_wall_active") and 
+        features.get("ask_wall_dist_bps") is not None and 
+        abs(features["ask_wall_dist_bps"]) < 18):
+        wall_edge -= 2.2
+
+    # Абсорбция
+    absorption_edge = 0.0
+    abs_state = features.get("absorption", "NONE")
+    if abs_state == "BULLISH ABSORPTION":
+        absorption_edge += 3.0
+    elif abs_state == "BEARISH ABSORPTION":
+        absorption_edge -= 3.0
+
+    score = (
+        s30 + s10 + s3 + 
+        depth_edge + micro_edge + 
+        momentum_edge + aggression_edge + 
+        wall_edge + absorption_edge
+    )
+
+    # Штрафы (Penalties)
+    penalties = 0.0
+    if features.get("dead_depth"):
+        penalties += 3.0
+    if features.get("regime_live") == "NOISY":
+        penalties += 2.0
+    if features.get("spoof_risk") == "HIGH":
+        penalties += 2.5
+    elif features.get("spoof_risk") == "MEDIUM":
+        penalties += 1.0
+
+    agreement_label = features.get("agreement_label", "PARTIAL")
+    if agreement_label == "MIXED":
+        penalties += 2.0
+    elif agreement_label == "PARTIAL":
+        penalties += 1.0
+
+    # Дивергенция (до штрафов)
+    div = features.get("divergence")
+    if div == "bullish":
+        score += 2.5
+    elif div == "bearish":
+        score -= 2.5
+
+    # Применение штрафов
+    score_after = score - penalties if score >= 0 else score + penalties
+    direction = "UP" if score_after >= 0 else "DOWN"
+
+    p_up, p_down, confidence = sigmoid_conf(score_after)
+    regime = features.get("regime_live", "FLAT")
+
+    # Логика статусов
+    if confidence < NO_TRADE_THRESHOLD:
+        status, display_signal = "NO TRADE", "NO TRADE"
+    elif regime == "FLAT" and confidence < BAD_SIGNAL_THRESHOLD:
+        status, display_signal = "NO TRADE", "NO TRADE"
+    elif regime == "FLAT" or confidence < BAD_SIGNAL_THRESHOLD:
+        status, display_signal = "BAD SIGNAL", direction
+    else:
+        status, display_signal = "GOOD SIGNAL", direction
+
+    # Сбор причин
+    reasons = []
+    w10 = features.get("w10", {})
+    if w10.get("buy_pct", 50) > 56:
+        reasons.append(f"10s flow bullish ({w10['buy_pct']}% buy)")
+    elif w10.get("sell_pct", 50) > 56:
+        reasons.append(f"10s flow bearish ({w10['sell_pct']}% sell)")
+
+    f_mom = features.get("flow_momentum_num", 0.0)
+    if abs(f_mom) > 5:
+        reasons.append(f"flow momentum {f_mom:+.1f}")
+
+    w3_burst = features.get("w3", {}).get("burst_ratio", 1.0)
+    if w3_burst > 1.8:
+        reasons.append(f"trade burst x{w3_burst:.2f}")
+
+    imb = features.get("imbalance", 0.0)
+    if abs(imb) > 0.12:
+        reasons.append(f"depth imbalance {imb:+.3f}")
+
+    m_drift = features.get("micro_bias_bps", 0.0)
+    if abs(m_drift) > 0.8:
+        reasons.append(f"microprice drift {m_drift:+.2f} bps")
+
+    if features.get("bid_wall_active"):
+        reasons.append(f"bid wall @ {features.get('bid_wall_price')}")
+    if features.get("ask_wall_active"):
+        reasons.append(f"ask wall @ {features.get('ask_wall_price')}")
+
+    if abs_state != "NONE":
+        reasons.append(abs_state.lower())
+
+    if div:
+        reasons.append(f"{div} divergence")
+
+    reasons.append(f"market regime: {regime.lower()}")
+    reasons.append(f"volatility: {features.get('volatility_label', 'normal').lower()}")
+    
+    if penalties > 0:
+        reasons.append(f"confidence penalty {penalties:.1f}")
+
+    return {
+        "display_signal": display_signal,
+        "direction": direction,
+        "status": status,
+        "regime": regime,
+        "confidence": round(confidence, 1),
+        "score": round(score_after, 2),
+        "p_up": round(p_up, 1),
+        "p_down": round(p_down, 1),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "target_open_utc": next_5m_open().isoformat(),
+        "reasons": reasons[:10],
+    }
+

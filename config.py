@@ -1,0 +1,16 @@
+BINANCE_SYMBOL = "btcusdt"
+BINANCE_WS_TRADES = f"wss://stream.binance.com:9443/ws/{BINANCE_SYMBOL}@trade"
+BINANCE_WS_DEPTH = f"wss://stream.binance.com:9443/ws/{BINANCE_SYMBOL}@depth20@100ms"
+
+ORDERFLOW_WINDOW_SEC = 30
+ENTRY_LEAD_SEC = 8
+HIDE_SIGNAL_SEC = 15
+DEPTH_LEVELS = 20
+
+NO_TRADE_THRESHOLD = 51.0
+BAD_SIGNAL_THRESHOLD = 56.0
+
+SIGNAL_FILE = "signal.json"
+DASHBOARD_FILE = "dashboard_data.json"
+HISTORY_FILE = "signals_history.json"
+AI_STATE_FILE = "ai_state.json"

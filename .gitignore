@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+dashboard_data.json
+signal.json
+signals_history.json
+ai_state.json
+
+*.log
+*.sqlite3
+.env
+.env.*
+
+.DS_Store

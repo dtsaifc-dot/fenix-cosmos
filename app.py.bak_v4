@@ -1,0 +1,300 @@
+import asyncio
+import json
+import threading
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+from flask import Flask, jsonify, render_template
+
+from collector_binance import BinanceState, run_binance_collectors
+from config import DASHBOARD_FILE, SIGNAL_FILE, HISTORY_FILE, ENTRY_LEAD_SEC, HIDE_SIGNAL_SEC
+from features import build_features
+from signal_engine import (
+    build_signal,
+    should_lock_signal,
+    next_5m_open,
+    current_5m_open,
+    seconds_to_next_5m,
+    phase_name,
+)
+
+app = Flask(__name__)
+state = BinanceState()
+
+dashboard_cache = {
+    "features_live": {},
+    "signal_locked": {},
+    "signal_preview": {},
+    "history": [],
+    "stats": {},
+    "meta": {}
+}
+
+lock = threading.Lock()
+
+
+def load_history():
+    p = Path(HISTORY_FILE)
+    if not p.exists():
+        return []
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_history(hist):
+    Path(HISTORY_FILE).write_text(
+        json.dumps(hist, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+
+history = load_history()
+current_locked = None
+locked_target = None
+last_candle_open_seen = None
+
+
+def utc_now():
+    return datetime.now(timezone.utc)
+
+
+def direction_from_open_close(open_price, close_price):
+    if open_price is None or close_price is None:
+        return None
+    if close_price > open_price:
+        return "UP"
+    if close_price < open_price:
+        return "DOWN"
+    return "FLAT"
+
+
+def compute_stats(hist):
+    resolved = [x for x in hist if x.get("result") in ("WIN", "LOSS")]
+    wins = sum(1 for x in resolved if x["result"] == "WIN")
+
+    up_rows = [x for x in resolved if x.get("signal") == "UP"]
+    down_rows = [x for x in resolved if x.get("signal") == "DOWN"]
+
+    up_wr = (sum(1 for x in up_rows if x["result"] == "WIN") / len(up_rows) * 100.0) if up_rows else 0.0
+    down_wr = (sum(1 for x in down_rows if x["result"] == "WIN") / len(down_rows) * 100.0) if down_rows else 0.0
+    overall_wr = (wins / len(resolved) * 100.0) if resolved else 0.0
+
+    return {
+        "total": len(hist),
+        "resolved": len(resolved),
+        "wins": wins,
+        "losses": sum(1 for x in resolved if x["result"] == "LOSS"),
+        "up_wr": round(up_wr, 1),
+        "down_wr": round(down_wr, 1),
+        "winrate": round(overall_wr, 1),
+        "last15": hist[:15]
+    }
+
+
+def on_new_candle_start(current_open_iso, current_price):
+    global history
+
+    for row in history:
+        if row.get("target_candle") == current_open_iso and row.get("open") is None:
+            row["open"] = round(current_price, 2) if current_price is not None else None
+
+    for row in history:
+        target = row.get("target_candle")
+        if row.get("result") == "PENDING" and target and target < current_open_iso and row.get("open") is not None:
+            close_price = round(current_price, 2) if current_price is not None else None
+            row["close"] = close_price
+            actual = direction_from_open_close(row["open"], close_price)
+            row["actual"] = actual
+
+            if row.get("status") == "NO TRADE":
+                row["result"] = "SKIP"
+            else:
+                row["result"] = "WIN" if actual == row.get("signal") else "LOSS"
+
+    history = history[:400]
+    save_history(history)
+
+
+def collector_thread():
+    asyncio.run(run_binance_collectors(state))
+
+
+def engine_thread():
+    global current_locked, locked_target, last_candle_open_seen, history
+
+    while True:
+        try:
+            now = utc_now()
+            features_live = build_features(state)
+
+            current_open = current_5m_open(now).isoformat()
+            next_open = next_5m_open(now).isoformat()
+            last_price = features_live.get("last_price")
+            phase = phase_name(now, HIDE_SIGNAL_SEC, ENTRY_LEAD_SEC)
+
+            if last_candle_open_seen is None:
+                last_candle_open_seen = current_open
+
+            if current_open != last_candle_open_seen:
+                on_new_candle_start(current_open, last_price)
+                last_candle_open_seen = current_open
+
+            preview_signal = build_signal(features_live)
+
+            if should_lock_signal(now, ENTRY_LEAD_SEC):
+                if locked_target != next_open:
+                    current_locked = {
+                        "display_signal": preview_signal["display_signal"],
+                        "direction": preview_signal["direction"],
+                        "status": preview_signal["status"],
+                        "regime": preview_signal["regime"],
+                        "confidence": preview_signal["confidence"],
+                        "score": preview_signal["score"],
+                        "p_up": preview_signal["p_up"],
+                        "p_down": preview_signal["p_down"],
+                        "generated_at": now.isoformat(),
+                        "target_open_utc": next_open,
+                        "seconds_left": round(seconds_to_next_5m(now), 1),
+                        "reasons": preview_signal["reasons"],
+                    }
+                    locked_target = next_open
+
+                    history.insert(0, {
+                        "signal_time": now.isoformat(),
+                        "target_candle": next_open,
+                        "signal": current_locked["direction"],
+                        "display_signal": current_locked["display_signal"],
+                        "status": current_locked["status"],
+                        "regime": current_locked["regime"],
+                        "confidence": current_locked["confidence"],
+                        "score": current_locked["score"],
+                        "p_up": current_locked["p_up"],
+                        "p_down": current_locked["p_down"],
+                        "buy_pct": features_live["w10"]["buy_pct"],
+                        "sell_pct": features_live["w10"]["sell_pct"],
+                        "flow": features_live.get("flow"),
+                        "imbalance": features_live.get("imbalance"),
+                        "imbalance_pct": features_live.get("imbalance_pct"),
+                        "cum_delta": features_live["w10"]["cum_delta"],
+                        "bid_ask_ratio": features_live.get("bid_ask_ratio"),
+                        "open": None,
+                        "close": None,
+                        "actual": None,
+                        "result": "PENDING" if current_locked["status"] != "NO TRADE" else "SKIP",
+                        "reasons": current_locked["reasons"],
+                    })
+                    history = history[:400]
+                    save_history(history)
+
+            preview_ui = dict(preview_signal)
+            preview_ui["seconds_left"] = round(seconds_to_next_5m(now), 1)
+
+            if current_locked:
+                locked_ui = dict(current_locked)
+                locked_ui["seconds_left"] = round(seconds_to_next_5m(now), 1)
+            else:
+                if phase == "LIVE":
+                    locked_ui = {
+                        "display_signal": "COLLECTING",
+                        "direction": preview_signal["direction"],
+                        "status": "LIVE STATE",
+                        "regime": preview_signal["regime"],
+                        "confidence": preview_signal["confidence"],
+                        "score": preview_signal["score"],
+                        "p_up": preview_signal["p_up"],
+                        "p_down": preview_signal["p_down"],
+                        "generated_at": preview_signal["generated_at"],
+                        "target_open_utc": next_open,
+                        "seconds_left": round(seconds_to_next_5m(now), 1),
+                        "reasons": preview_signal["reasons"],
+                    }
+                elif phase == "PREPARE":
+                    locked_ui = {
+                        "display_signal": "PREPARE",
+                        "direction": preview_signal["direction"],
+                        "status": "LOCK WINDOW",
+                        "regime": preview_signal["regime"],
+                        "confidence": preview_signal["confidence"],
+                        "score": preview_signal["score"],
+                        "p_up": preview_signal["p_up"],
+                        "p_down": preview_signal["p_down"],
+                        "generated_at": preview_signal["generated_at"],
+                        "target_open_utc": next_open,
+                        "seconds_left": round(seconds_to_next_5m(now), 1),
+                        "reasons": preview_signal["reasons"],
+                    }
+                else:
+                    locked_ui = {
+                        "display_signal": preview_signal["display_signal"],
+                        "direction": preview_signal["direction"],
+                        "status": preview_signal["status"],
+                        "regime": preview_signal["regime"],
+                        "confidence": preview_signal["confidence"],
+                        "score": preview_signal["score"],
+                        "p_up": preview_signal["p_up"],
+                        "p_down": preview_signal["p_down"],
+                        "generated_at": preview_signal["generated_at"],
+                        "target_open_utc": next_open,
+                        "seconds_left": round(seconds_to_next_5m(now), 1),
+                        "reasons": preview_signal["reasons"],
+                    }
+
+            stats = compute_stats(history)
+
+            with lock:
+                dashboard_cache["features_live"] = features_live
+                dashboard_cache["signal_preview"] = preview_ui
+                dashboard_cache["signal_locked"] = locked_ui
+                dashboard_cache["history"] = history
+                dashboard_cache["stats"] = stats
+                dashboard_cache["meta"] = {
+                    "phase": phase,
+                    "entry_lead_sec": ENTRY_LEAD_SEC,
+                    "hide_signal_sec": HIDE_SIGNAL_SEC,
+                    "server_time": now.isoformat(),
+                    "locked_target": locked_target,
+                }
+
+            Path(DASHBOARD_FILE).write_text(
+                json.dumps(dashboard_cache, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+            Path(SIGNAL_FILE).write_text(
+                json.dumps(locked_ui, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+
+        except Exception as e:
+            print(f"ENGINE ERROR: {e}", flush=True)
+
+        time.sleep(1)
+
+
+@app.route("/api/dashboard")
+def api_dashboard():
+    with lock:
+        return jsonify(dashboard_cache)
+
+
+@app.route("/api/signal")
+def api_signal():
+    with lock:
+        return jsonify(dashboard_cache["signal_locked"])
+
+
+@app.route("/")
+def dashboard():
+    return render_template("dashboard.html")
+
+
+if __name__ == "__main__":
+    t1 = threading.Thread(target=collector_thread, daemon=True)
+    t2 = threading.Thread(target=engine_thread, daemon=True)
+    t1.start()
+    t2.start()
+
+    app.run(host="0.0.0.0", port=8091, debug=False)
