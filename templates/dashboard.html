@@ -2,201 +2,346 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <title>FENIX COSMOS</title>
+  <title>PHOENIX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
     :root{
-      --bg:#030712;
-      --panel:rgba(9,18,34,.90);
-      --panel2:rgba(13,24,46,.92);
-      --line:rgba(120,180,255,.13);
-      --text:#d8e9ff;
-      --muted:#88a4c7;
-      --cyan:#6fe8ff;
-      --blue:#7da7ff;
-      --violet:#9f8dff;
-      --green:#70f0b5;
-      --red:#ff6f91;
-      --amber:#ffd166;
-      --shadow:0 10px 28px rgba(0,0,0,.34);
+      --bg:#030813;
+      --bg2:#07101d;
+      --bg3:#0b1628;
+      --panel:rgba(10,18,32,.88);
+      --panel-2:rgba(12,23,40,.94);
+      --line:rgba(120,180,255,.10);
+      --line-strong:rgba(120,180,255,.18);
+
+      --text:#deebff;
+      --muted:#7f9cbe;
+      --muted-2:#5e7696;
+
+      --cyan:#76e7ff;
+      --cyan-2:#39c7ff;
+      --blue:#8aa8ff;
+      --violet:#a58fff;
+
+      --green:#68f0b1;
+      --green-d:#1e7c5a;
+
+      --red:#ff7898;
+      --red-d:#8f3951;
+
+      --amber:#ffd36e;
+      --amber-d:#8b6b24;
+
+      --shadow:0 18px 48px rgba(0,0,0,.32);
+      --radius:20px;
     }
 
     *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
     body{
-      margin:0;
-      color:var(--text);
-      font-family:Inter,Segoe UI,Arial,sans-serif;
       min-height:100vh;
-      overflow-x:hidden;
+      color:var(--text);
+      font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;
       background:
-        radial-gradient(circle at 15% 20%, rgba(111,232,255,.08), transparent 18%),
-        radial-gradient(circle at 82% 14%, rgba(159,141,255,.10), transparent 22%),
-        radial-gradient(circle at 74% 80%, rgba(125,167,255,.07), transparent 18%),
-        linear-gradient(180deg,#020611 0%, #06101d 55%, #081425 100%);
+        radial-gradient(circle at 12% 18%, rgba(118,231,255,.08), transparent 20%),
+        radial-gradient(circle at 80% 12%, rgba(138,168,255,.10), transparent 23%),
+        radial-gradient(circle at 84% 78%, rgba(165,143,255,.08), transparent 18%),
+        linear-gradient(180deg,#020611 0%, #06101d 45%, #081423 100%);
+      overflow-x:hidden;
     }
 
     body::before{
       content:"";
       position:fixed;
       inset:0;
-      z-index:0;
       pointer-events:none;
-      opacity:.55;
+      opacity:.30;
       background-image:
-        radial-gradient(2px 2px at 25px 30px, rgba(255,255,255,.9), transparent 60%),
-        radial-gradient(1.5px 1.5px at 90px 120px, rgba(170,220,255,.8), transparent 60%),
-        radial-gradient(1.8px 1.8px at 180px 60px, rgba(255,255,255,.85), transparent 60%),
-        radial-gradient(1.4px 1.4px at 250px 160px, rgba(170,220,255,.75), transparent 60%),
-        radial-gradient(2px 2px at 340px 40px, rgba(255,255,255,.85), transparent 60%),
-        radial-gradient(1.2px 1.2px at 430px 110px, rgba(170,220,255,.7), transparent 60%),
-        radial-gradient(1.8px 1.8px at 520px 80px, rgba(255,255,255,.9), transparent 60%),
-        radial-gradient(1.5px 1.5px at 620px 155px, rgba(170,220,255,.8), transparent 60%),
-        radial-gradient(2px 2px at 760px 45px, rgba(255,255,255,.9), transparent 60%),
-        radial-gradient(1.4px 1.4px at 890px 130px, rgba(170,220,255,.8), transparent 60%),
-        radial-gradient(1.8px 1.8px at 1020px 70px, rgba(255,255,255,.85), transparent 60%),
-        radial-gradient(1.4px 1.4px at 1150px 150px, rgba(170,220,255,.75), transparent 60%);
-      background-size:1200px 230px;
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.9), transparent 60%),
+        radial-gradient(1.5px 1.5px at 90px 140px, rgba(140,220,255,.8), transparent 60%),
+        radial-gradient(1.5px 1.5px at 780px 70px, rgba(255,255,255,.9), transparent 60%),
+        radial-gradient(1.2px 1.2px at 1100px 180px, rgba(140,220,255,.75), transparent 60%);
+      background-size:1200px 260px;
       background-repeat:repeat;
+      z-index:0;
     }
 
     .wrap{
       position:relative;
       z-index:1;
-      max-width:1600px;
+      max-width:1680px;
       margin:0 auto;
-      padding:14px;
+      padding:18px;
     }
 
     .topbar{
       display:grid;
-      grid-template-columns:1fr auto 1fr;
+      grid-template-columns:1fr auto;
       align-items:center;
-      gap:10px;
-      margin-bottom:12px;
+      gap:16px;
+      margin-bottom:16px;
     }
 
-    .brand{
-      font-size:24px;
-      font-weight:900;
-      color:var(--cyan);
-      letter-spacing:.6px;
-      text-shadow:0 0 16px rgba(111,232,255,.16);
+    .brandbox{
+      display:flex;
+      align-items:center;
+      gap:14px;
     }
 
-    .motto{
-      text-align:center;
-      font-size:15px;
+    .brandmark{
+      width:56px;
+      height:56px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(20,38,63,.95), rgba(9,18,33,.95));
+      border:1px solid var(--line-strong);
+      box-shadow:0 0 28px rgba(118,231,255,.08);
+      flex-shrink:0;
+    }
+
+    .brandmark svg{
+      width:30px;
+      height:30px;
+      fill:none;
+      stroke:var(--cyan);
+      stroke-width:1.8;
+      filter:drop-shadow(0 0 10px rgba(118,231,255,.18));
+    }
+
+    .brandtext{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+
+    .brandtitle{
+      font-family:Orbitron, Inter, sans-serif;
+      font-size:28px;
       font-weight:800;
-      color:#b7d8ff;
-      letter-spacing:.7px;
+      letter-spacing:1.4px;
+      color:#dff4ff;
+      text-shadow:0 0 18px rgba(118,231,255,.10);
+    }
+
+    .brandsub{
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
+    .top-right{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(10,18,32,.78);
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .dot-live{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 10px rgba(104,240,177,.55);
     }
 
     .clock{
+      font-family:Orbitron, Inter, sans-serif;
+      font-size:26px;
+      font-weight:800;
+      color:#d8ecff;
+      letter-spacing:1px;
+      min-width:140px;
       text-align:right;
-      font-size:28px;
-      font-weight:900;
-      color:#cfe8ff;
-      text-shadow:0 0 15px rgba(111,232,255,.14);
     }
 
-    .grid-top, .grid-bottom{
+    .grid-top,
+    .grid-bottom{
       display:grid;
       grid-template-columns:1.05fr 1fr 1fr;
-      gap:12px;
+      gap:14px;
       align-items:start;
     }
 
-    .grid-bottom{ margin-top:12px; }
+    .grid-bottom{
+      margin-top:14px;
+    }
 
     .card{
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
+      border-radius:var(--radius);
+      padding:14px;
       box-shadow:var(--shadow);
-      backdrop-filter:blur(4px);
+      backdrop-filter:blur(6px);
       min-height:100%;
+      overflow:hidden;
     }
 
     .section-title{
-      color:#98c4ff;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:#97c6ff;
       font-size:10px;
       text-transform:uppercase;
-      letter-spacing:1.1px;
-      margin-bottom:10px;
+      letter-spacing:1.4px;
+      margin-bottom:12px;
       font-weight:800;
+    }
+
+    .section-title::before{
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:linear-gradient(180deg,var(--cyan),var(--blue));
+      box-shadow:0 0 10px rgba(118,231,255,.35);
+      flex-shrink:0;
+    }
+
+    .signal-card{
+      position:relative;
+    }
+
+    .signal-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -80px -100px auto;
+      width:220px;
+      height:220px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(118,231,255,.10), transparent 68%);
+      pointer-events:none;
     }
 
     .signal-main{
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:4px;
-      margin-top:2px;
+      gap:6px;
+      padding:4px 0 8px;
+    }
+
+    .phase{
+      font-size:11px;
+      font-weight:800;
+      color:var(--muted);
+      letter-spacing:1.1px;
+      text-transform:uppercase;
     }
 
     .signal-word{
-      font-size:44px;
+      font-family:Orbitron, Inter, sans-serif;
+      font-size:52px;
       line-height:1;
-      font-weight:900;
-      letter-spacing:.4px;
+      font-weight:800;
+      letter-spacing:1px;
+      text-align:center;
+      margin-top:2px;
+      text-shadow:0 0 20px rgba(255,255,255,.06);
     }
 
     .up{color:var(--green)}
     .down{color:var(--red)}
-    .neutral{color:#e5eefc}
+    .neutral{color:#eef6ff}
 
     .status-line{
       font-size:12px;
       font-weight:800;
-      color:#b8d6ff;
-    }
-
-    .regime-line,.strength-line{
-      font-size:11px;
-      font-weight:800;
-      color:var(--violet);
+      color:#bdd9ff;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      text-align:center;
     }
 
     .confidence-big{
-      font-size:22px;
-      font-weight:900;
+      font-family:Orbitron, Inter, sans-serif;
+      font-size:34px;
+      line-height:1;
+      font-weight:800;
       color:var(--cyan);
+      margin-top:2px;
     }
 
     .countdown{
-      font-size:50px;
+      font-family:Orbitron, Inter, sans-serif;
+      font-size:54px;
       line-height:1;
-      font-weight:900;
-      color:#b8ddff;
+      font-weight:800;
+      color:#d7ecff;
+      margin-top:4px;
+      letter-spacing:1px;
+    }
+
+    .bigbar{
+      width:100%;
+      max-width:260px;
     }
 
     .rows{
       display:grid;
       grid-template-columns:1fr auto;
-      gap:6px 10px;
+      gap:7px 12px;
       margin-top:12px;
       font-size:13px;
     }
 
-    .label{color:var(--muted)}
-    .value{font-weight:800;text-align:right}
+    .label{
+      color:var(--muted);
+    }
 
-    .metric-row{margin-bottom:11px}
+    .value{
+      text-align:right;
+      font-weight:800;
+      color:#e4f1ff;
+    }
+
+    .metric-row{
+      margin-bottom:12px;
+    }
+
     .metric-head{
       display:flex;
       justify-content:space-between;
+      align-items:center;
+      gap:10px;
       font-size:12px;
-      margin-bottom:5px;
+      margin-bottom:6px;
+    }
+
+    .metric-head span:first-child{
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    .metric-head span:last-child{
+      color:#e2f1ff;
+      font-weight:800;
     }
 
     .bar-track{
       width:100%;
-      height:9px;
+      height:10px;
       border-radius:999px;
       overflow:hidden;
-      background:#121b2e;
-      border:1px solid rgba(120,180,255,.10);
+      background:#111a2c;
+      border:1px solid rgba(120,180,255,.08);
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.25);
     }
 
     .bar-fill{
@@ -205,25 +350,25 @@
       transition:width .25s ease;
     }
 
-    .bar-cyan{background:linear-gradient(90deg,#2c7aa7,var(--cyan))}
-    .bar-green{background:linear-gradient(90deg,#2c8a6a,var(--green))}
-    .bar-red{background:linear-gradient(90deg,#7f3350,var(--red))}
-    .bar-blue{background:linear-gradient(90deg,#4069cf,var(--blue))}
-    .bar-violet{background:linear-gradient(90deg,#6757d6,var(--violet))}
-    .bar-amber{background:linear-gradient(90deg,#8f6b2a,var(--amber))}
+    .bar-cyan{background:linear-gradient(90deg,#2d6f8a,var(--cyan))}
+    .bar-green{background:linear-gradient(90deg,var(--green-d),var(--green))}
+    .bar-red{background:linear-gradient(90deg,var(--red-d),var(--red))}
+    .bar-blue{background:linear-gradient(90deg,#405da8,var(--blue))}
+    .bar-violet{background:linear-gradient(90deg,#6656c8,var(--violet))}
+    .bar-amber{background:linear-gradient(90deg,var(--amber-d),var(--amber))}
 
     .stats-grid{
       display:grid;
       grid-template-columns:repeat(4,1fr);
-      gap:8px;
+      gap:9px;
       margin-bottom:12px;
     }
 
     .mini{
       background:rgba(8,14,26,.72);
-      border:1px solid rgba(120,180,255,.10);
-      border-radius:12px;
-      padding:9px;
+      border:1px solid rgba(120,180,255,.08);
+      border-radius:14px;
+      padding:10px 8px;
       text-align:center;
     }
 
@@ -231,63 +376,118 @@
       font-size:10px;
       color:var(--muted);
       text-transform:uppercase;
+      letter-spacing:.8px;
+      margin-bottom:5px;
     }
 
     .mini .v{
+      font-family:Orbitron, Inter, sans-serif;
       font-size:20px;
-      font-weight:900;
-      color:#d7ebff;
+      font-weight:800;
+      color:#dcefff;
+      line-height:1;
     }
 
     .last15{
       display:flex;
-      gap:5px;
+      gap:6px;
       flex-wrap:wrap;
       margin-top:8px;
+      min-height:24px;
     }
 
     .dot{
-      width:18px;
-      height:18px;
-      border-radius:5px;
+      width:20px;
+      height:20px;
+      border-radius:6px;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:10px;
+      font-size:11px;
       font-weight:900;
-      border:1px solid rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.05);
     }
 
-    .dot.win{background:rgba(112,240,181,.16);color:var(--green)}
-    .dot.loss{background:rgba(255,111,145,.18);color:#ff9bb3}
-    .dot.pending{background:rgba(111,232,255,.12);color:var(--cyan)}
-    .dot.skip{background:rgba(180,180,180,.12);color:#ddd}
+    .dot.win{
+      background:rgba(104,240,177,.14);
+      color:var(--green);
+    }
+
+    .dot.loss{
+      background:rgba(255,120,152,.18);
+      color:#ffafc1;
+    }
+
+    .dot.pending{
+      background:rgba(118,231,255,.10);
+      color:var(--cyan);
+    }
+
+    .dot.skip{
+      background:rgba(180,190,210,.12);
+      color:#ced8e6;
+    }
+
+    .reasons-box{
+      margin-top:10px;
+      border-top:1px solid rgba(120,180,255,.08);
+      padding-top:10px;
+    }
+
+    .reasons-title{
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:800;
+    }
 
     .reasons-list{
+      list-style:none;
       margin:0;
-      padding-left:18px;
-      font-size:12px;
-      line-height:1.5;
-      color:#d5e6ff;
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      gap:7px;
     }
 
-    .history-card{margin-top:12px}
+    .reasons-list li{
+      position:relative;
+      padding-left:14px;
+      color:#d7e8ff;
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .reasons-list li::before{
+      content:"•";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--cyan);
+      font-weight:900;
+    }
+
+    .history-card{
+      margin-top:14px;
+    }
 
     .table-wrap{
       overflow:auto;
-      border-radius:12px;
-      border:1px solid rgba(120,180,255,.10);
-      background:rgba(7,12,24,.85);
+      border-radius:14px;
+      border:1px solid rgba(120,180,255,.08);
+      background:rgba(7,12,24,.86);
     }
 
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:2100px;
+      min-width:1550px;
     }
 
     th,td{
-      padding:8px 7px;
+      padding:9px 8px;
       border-bottom:1px solid rgba(255,255,255,.04);
       font-size:11px;
       text-align:left;
@@ -295,103 +495,165 @@
     }
 
     th{
-      color:#9bc7ff;
-      background:#0d1627;
+      color:#9bc8ff;
+      background:#0c1526;
       position:sticky;
       top:0;
       z-index:1;
+      text-transform:uppercase;
+      letter-spacing:.6px;
+      font-size:10px;
+    }
+
+    tbody tr:hover{
+      background:rgba(255,255,255,.02);
     }
 
     .tag{
-      display:inline-block;
-      min-width:68px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:76px;
       text-align:center;
-      padding:4px 8px;
+      padding:4px 9px;
       border-radius:999px;
       font-weight:900;
       font-size:10px;
-      border:1px solid rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.07);
+      letter-spacing:.4px;
     }
 
-    .tag.up{background:rgba(112,240,181,.13);color:var(--green)}
-    .tag.down{background:rgba(255,111,145,.16);color:#ff9bb3}
-    .tag.no{background:rgba(190,190,190,.12);color:#ddd}
+    .tag.up{
+      background:rgba(104,240,177,.12);
+      color:var(--green);
+    }
 
-    .result-win{color:var(--green);font-weight:900}
-    .result-loss{color:#ff9bb3;font-weight:900}
-    .result-pending{color:var(--cyan);font-weight:900}
-    .result-skip{color:#ddd;font-weight:900}
+    .tag.down{
+      background:rgba(255,120,152,.14);
+      color:#ffabc0;
+    }
 
-    .footer-note{
-      margin-top:8px;
+    .tag.neutral{
+      background:rgba(118,231,255,.10);
+      color:var(--cyan);
+    }
+
+    .result-win{
+      color:var(--green);
+      font-weight:900;
+    }
+
+    .result-loss{
+      color:#ffb0c2;
+      font-weight:900;
+    }
+
+    .result-pending{
+      color:var(--cyan);
+      font-weight:900;
+    }
+
+    .result-skip{
+      color:#cad5e5;
+      font-weight:900;
+    }
+
+    .muted{
       color:var(--muted);
-      font-size:11px;
     }
 
-    @media (max-width:1200px){
+    @media (max-width:1280px){
       .grid-top,.grid-bottom{grid-template-columns:1fr}
-      .topbar{grid-template-columns:1fr;gap:8px}
-      .brand,.motto,.clock{text-align:center}
+      .topbar{grid-template-columns:1fr}
+      .top-right{justify-content:space-between}
+      .clock{text-align:right}
+    }
+
+    @media (max-width:640px){
+      .wrap{padding:12px}
+      .brandtitle{font-size:22px}
+      .signal-word{font-size:40px}
+      .countdown{font-size:42px}
+      .stats-grid{grid-template-columns:repeat(2,1fr)}
+      .top-right{flex-wrap:wrap}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
+
     <div class="topbar">
-      <div class="brand">FENIX COSMOS</div>
-      <div class="motto">У самурая нет цели — есть только путь</div>
-      <div class="clock" id="clock">--:--:--</div>
+      <div class="brandbox">
+        <div class="brandmark">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3c2.6 2.3 3.9 4.6 3.9 6.9 1-.6 2.2-1.5 3.4-2.7.1 4.8-1.5 7.9-4.8 9.4.3 1 .5 2 .5 3.1-1.7-1.6-2.8-2.7-3.3-3.3-.8 1.1-2.1 2.2-3.8 3.4.2-1.6.5-3 .9-4.1C6.4 14.6 5 12.2 5 8.7c1.6 1.2 2.9 2 4 2.5C9 8.4 10 5.7 12 3Z"/>
+          </svg>
+        </div>
+        <div class="brandtext">
+          <div class="brandtitle">PHOENIX</div>
+          <div class="brandsub">Signal Dashboard</div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <div class="pill">
+          <span class="dot-live"></span>
+          <span>REAL-TIME</span>
+        </div>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
     </div>
 
     <div class="grid-top">
-      <div class="card">
+      <div class="card signal-card">
         <div class="section-title">Signal Engine</div>
+
         <div class="signal-main">
+          <div id="phaseVal" class="phase">COLLECTING</div>
           <div id="signalWord" class="signal-word neutral">COLLECTING</div>
           <div id="statusLine" class="status-line">COLLECTING DATA</div>
-          <div id="regimeLine" class="regime-line">-</div>
-          <div id="globalTrendLine" class="regime-line">Global trend 1H: -</div>
-          <div id="strengthLine" class="strength-line">-</div>
-          <div id="confidenceBig" class="confidence-big">0%</div>
-          <div class="bar-track" style="width:100%;max-width:240px;">
-            <div id="confidenceBar" class="bar-fill bar-cyan" style="width:0%"></div>
+          <div id="confidenceBig" class="confidence-big">0.0%</div>
+
+          <div class="bigbar">
+            <div class="bar-track">
+              <div id="confidenceBar" class="bar-fill bar-cyan" style="width:0%"></div>
+            </div>
           </div>
+
           <div id="countdown" class="countdown">0:00</div>
         </div>
 
         <div class="rows">
-          <div class="label">Target</div><div class="value" id="targetCandle">-</div>
-          <div class="label">Created</div><div class="value" id="generatedAt">-</div>
-          <div class="label">Rule</div><div class="value" id="ruleConf">-</div>
-          <div class="label">AI</div><div class="value" id="aiConf">-</div>
-          <div class="label">AI dir</div><div class="value" id="aiDir">-</div>
-          <div class="label">Decision</div><div class="value" id="decisionVal">-</div>
-          <div class="label">Size mode</div><div class="value" id="sizeModeVal">-</div>
-          <div class="label">Risk label</div><div class="value" id="riskLabelVal">-</div>
-          <div class="label">Risk score</div><div class="value" id="riskScoreVal">-</div>
+          <div class="label">Target candle</div><div class="value" id="targetCandle">-</div>
+          <div class="label">Created</div><div class="value" id="createdAt">-</div>
+          <div class="label">Direction</div><div class="value" id="directionVal">-</div>
+          <div class="label">Rule / AI</div><div class="value"><span id="ruleConf">-</span> / <span id="aiConf">-</span></div>
+          <div class="label">AI direction</div><div class="value" id="aiDirVal">-</div>
           <div class="label">Score</div><div class="value" id="scoreValue">-</div>
+          <div class="label">1H trend</div><div class="value" id="globalTrendLine">-</div>
+          <div class="label">15M bias</div><div class="value" id="globalBiasLine">-</div>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-title">Order Flow (5m)</div>
+        <div class="section-title">Order Flow</div>
 
         <div class="metric-row">
-          <div class="metric-head"><span>Buy Volume</span><span id="buyPctVal">-</span></div>
+          <div class="metric-head"><span>Buy volume</span><span id="buyPctVal">-</span></div>
           <div class="bar-track"><div id="buyPctBar" class="bar-fill bar-green" style="width:0%"></div></div>
         </div>
 
         <div class="metric-row">
-          <div class="metric-head"><span>Sell Volume</span><span id="sellPctVal">-</span></div>
+          <div class="metric-head"><span>Sell volume</span><span id="sellPctVal">-</span></div>
           <div class="bar-track"><div id="sellPctBar" class="bar-fill bar-red" style="width:0%"></div></div>
         </div>
 
         <div class="rows">
-          <div class="label">Trades Count</div><div class="value" id="tradesCount">-</div>
-          <div class="label">Buy vol</div><div class="value" id="buyQty">-</div>
-          <div class="label">Sell vol</div><div class="value" id="sellQty">-</div>
-          <div class="label">Flow Bias</div><div class="value" id="flowBias">-</div>
+          <div class="label">Trades count</div><div class="value" id="tradesCount">-</div>
+          <div class="label">Buy / Sell qty</div><div class="value"><span id="buyQtyVal">-</span> / <span id="sellQtyVal">-</span></div>
+          <div class="label">Flow bias</div><div class="value" id="flowBias">-</div>
           <div class="label">Aggressive B/S</div><div class="value" id="aggrState">-</div>
+          <div class="label">Flow momentum</div><div class="value" id="flowMomentumVal">-</div>
           <div class="label">60 / 30 / 10 / 3m</div><div class="value" id="windowState">-</div>
         </div>
       </div>
@@ -405,39 +667,35 @@
         </div>
 
         <div class="metric-row">
-          <div class="metric-head"><span>Bid / Ask Vol</span><span id="ratioVal">-</span></div>
+          <div class="metric-head"><span>Bid / Ask ratio</span><span id="ratioVal">-</span></div>
           <div class="bar-track"><div id="ratioBar" class="bar-fill bar-violet" style="width:0%"></div></div>
         </div>
 
         <div class="rows">
-          <div class="label">Bid vol</div><div class="value" id="bidVol">-</div>
-          <div class="label">Ask vol</div><div class="value" id="askVol">-</div>
-          <div class="label">Levels</div><div class="value" id="levelsVal">-</div>
+          <div class="label">Bid / Ask vol</div><div class="value"><span id="bidVol">-</span> / <span id="askVol">-</span></div>
           <div class="label">Micro bias</div><div class="value" id="microBiasVal">-</div>
+          <div class="label">Levels</div><div class="value" id="levelsVal">-</div>
+          <div class="label">Price</div><div class="value" id="lastPrice" style="color:var(--cyan)">-</div>
           <div class="label">Walls</div><div class="value" id="wallsVal">-</div>
-          <div class="label">Price</div><div class="value" id="lastPrice">-</div>
         </div>
       </div>
     </div>
 
     <div class="grid-bottom">
       <div class="card">
-        <div class="section-title">Trend, Delta, Higher TF</div>
+        <div class="section-title">Trend & Delta</div>
 
         <div class="metric-row">
-          <div class="metric-head"><span>Delta Slope</span><span id="deltaStrengthVal">-</span></div>
+          <div class="metric-head"><span>Delta slope</span><span id="deltaStrengthVal">-</span></div>
           <div class="bar-track"><div id="deltaStrengthBar" class="bar-fill bar-cyan" style="width:0%"></div></div>
         </div>
 
         <div class="rows">
-          <div class="label">Cum Delta</div><div class="value" id="cumDeltaVal">-</div>
-          <div class="label">Last delta</div><div class="value" id="lastDeltaVal">-</div>
-          <div class="label">Trend (7/20)</div><div class="value" id="trendBothVal">-</div>
+          <div class="label">Cum delta</div><div class="value" id="cumDeltaVal">-</div>
+          <div class="label">Delta trend 7 / 20</div><div class="value" id="trendBothVal">-</div>
           <div class="label">Divergence</div><div class="value" id="divergenceVal">-</div>
-          <div class="label">Live Regime</div><div class="value" id="liveRegimeVal">-</div>
-          <div class="label">Global Trend 1H</div><div class="value" id="globalTrendVal">-</div>
-          <div class="label">Global Bias 15m</div><div class="value" id="globalBiasVal">-</div>
-          <div class="label">Liquidity Sweep</div><div class="value" id="sweepVal">-</div>
+          <div class="label">Live regime</div><div class="value" id="liveRegimeVal">-</div>
+          <div class="label">Liquidity sweep</div><div class="value" id="liqSweepVal">-</div>
         </div>
       </div>
 
@@ -452,38 +710,40 @@
         </div>
 
         <div class="metric-row">
-          <div class="metric-head"><span>Overall Winrate</span><span id="overallWrText">0%</span></div>
+          <div class="metric-head"><span>Overall winrate</span><span id="overallWrText">0%</span></div>
           <div class="bar-track"><div id="overallWrBar" class="bar-fill bar-amber" style="width:0%"></div></div>
         </div>
 
         <div class="rows">
-          <div class="label">AI samples</div><div class="value" id="aiSamples">-</div>
-          <div class="label">AI live dir</div><div class="value" id="aiLiveDir">-</div>
-          <div class="label">AI live conf</div><div class="value" id="aiLiveConf">-</div>
-          <div class="label">Up WR</div><div class="value" id="statUpWr">-</div>
-          <div class="label">Down WR</div><div class="value" id="statDownWr">-</div>
+          <div class="label">UP WR</div><div class="value" id="upWrVal">-</div>
+          <div class="label">DOWN WR</div><div class="value" id="downWrVal">-</div>
+          <div class="label">Pending</div><div class="value" id="pendingVal">-</div>
         </div>
 
-        <div class="section-title" style="margin-top:10px;">Last 15</div>
-        <div id="last15" class="last15"></div>
-        <div id="last15Summary" class="footer-note">-</div>
+        <div class="reasons-box">
+          <div class="reasons-title">Last 15</div>
+          <div id="last15" class="last15"></div>
+        </div>
       </div>
 
       <div class="card">
-        <div class="section-title">Market Conditions & Reasons</div>
-        <div class="rows" style="margin-top:0;margin-bottom:12px;">
+        <div class="section-title">Market Conditions</div>
+
+        <div class="rows" style="margin-top:0">
           <div class="label">Volatility</div><div class="value" id="volatilityVal">-</div>
           <div class="label">Liquidity</div><div class="value" id="liquidityVal">-</div>
-          <div class="label">Smart Money</div><div class="value" id="smartMoneyVal">-</div>
+          <div class="label">Smart money</div><div class="value" id="smartMoneyVal">-</div>
           <div class="label">Trap / Spoof</div><div class="value" id="trapSpoofVal">-</div>
-          <div class="label">Agreement</div><div class="value" id="agreementVal">-</div>
-          <div class="label">Flow momentum</div><div class="value" id="flowMomentumVal">-</div>
-          <div class="label">Tape pressure</div><div class="value" id="tapePressureVal">-</div>
-          <div class="label">Market speed</div><div class="value" id="marketSpeedVal">-</div>
           <div class="label">Absorption</div><div class="value" id="absorptionVal">-</div>
+          <div class="label">Tape pressure</div><div class="value" id="tapePressureVal">-</div>
           <div class="label">Fake breakout</div><div class="value" id="fakeBreakoutVal">-</div>
+          <div class="label">Agreement</div><div class="value" id="agreementVal">-</div>
         </div>
-        <ul id="reasonsList" class="reasons-list"></ul>
+
+        <div class="reasons-box">
+          <div class="reasons-title">Signal reasons</div>
+          <ul id="reasonsList" class="reasons-list"></ul>
+        </div>
       </div>
     </div>
 
@@ -493,18 +753,15 @@
         <table>
           <thead>
             <tr>
-              <th>Time</th>
+              <th>Signal time</th>
               <th>Target</th>
               <th>Signal</th>
               <th>Status</th>
               <th>Regime</th>
-              <th>Strength</th>
               <th>Conf</th>
-              <th>Decision</th>
-              <th>Risk</th>
+              <th>Score</th>
               <th>Buy%</th>
-              <th>Depth</th>
-              <th>Cum Δ</th>
+              <th>Delta</th>
               <th>Open</th>
               <th>Close</th>
               <th>Actual</th>
@@ -519,228 +776,223 @@
 
   <script>
     function setClock(){
-      const d = new Date();
-      document.getElementById('clock').textContent = d.toLocaleTimeString('en-GB',{hour12:false});
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
     }
 
-    function fmt(v,digits=2){
-      if(v===null || v===undefined || Number.isNaN(Number(v))) return '-';
-      return Number(v).toFixed(digits);
+    function fmt(v,d=2){
+      return (v === null || v === undefined || Number.isNaN(Number(v))) ? '-' : Number(v).toFixed(d);
     }
 
-    function resultClass(r){
-      if(r==='WIN') return 'result-win';
-      if(r==='LOSS') return 'result-loss';
-      if(r==='SKIP') return 'result-skip';
-      return 'result-pending';
+    function fmtInt(v){
+      return (v === null || v === undefined || Number.isNaN(Number(v))) ? '-' : Math.round(Number(v)).toString();
     }
 
-    function tagClass(display){
-      const d=(display||'').toUpperCase();
-      if(d==='UP') return 'up';
-      if(d==='DOWN') return 'down';
-      return 'no';
+    function cutTime(iso, short=false){
+      if(!iso || typeof iso !== 'string') return '-';
+      const t = iso.split('T')[1] || '';
+      return short ? t.slice(0,5) : t.slice(0,8);
     }
 
-    function flowBias(buy,sell){
-      if(buy>sell) return 'BUY';
-      if(sell>buy) return 'SELL';
-      return 'NEUTRAL';
+    function signalClass(v){
+      const s = String(v || '').toUpperCase();
+      if(s === 'UP') return 'up';
+      if(s === 'DOWN') return 'down';
+      return 'neutral';
     }
 
-    function signedBar(v,maxAbs=1){
-      const n=Math.abs(Number(v||0));
-      return Math.max(0,Math.min(100,(n/maxAbs)*100));
+    function setText(id, value){
+      const el = document.getElementById(id);
+      if(el) el.textContent = value;
+    }
+
+    function setBar(id, value){
+      const el = document.getElementById(id);
+      if(el) el.style.width = Math.max(0, Math.min(100, value)) + '%';
     }
 
     async function refresh(){
-      const res = await fetch('/api/dashboard?ts=' + Date.now(), { cache: 'no-store' });
-      const data = await res.json();
+      try{
+        const res = await fetch('/api/dashboard', {cache:'no-store'});
+        const data = await res.json();
 
-      const s = data.signal_locked || {};
-      const f = data.features_live || {};
-      const history = data.history || [];
-      const stats = data.stats || {};
-      const meta = data.meta || {};
+        const s = data.signal_locked || {};
+        const f = data.features_live || {};
+        const stats = data.stats || {};
+        const meta = data.meta || {};
+        const history = data.history || [];
 
-      const display = (s.display_signal || 'COLLECTING').toUpperCase();
-      const signalWord = document.getElementById('signalWord');
+        const disp = String(s.display_signal || 'COLLECTING').toUpperCase();
+        const sigWord = document.getElementById('signalWord');
+        sigWord.textContent = disp;
+        sigWord.className = 'signal-word ' + signalClass(disp);
 
-      signalWord.textContent = display;
-      if(display==='UP'){
-        signalWord.className='signal-word up';
-      } else if(display==='DOWN'){
-        signalWord.className='signal-word down';
-      } else {
-        signalWord.className='signal-word neutral';
-      }
+        setText('phaseVal', (meta.phase || 'LIVE').toUpperCase());
+        setText('statusLine', (s.status || 'COLLECTING DATA').toUpperCase());
 
-      document.getElementById('statusLine').textContent = s.status || '-';
-      document.getElementById('regimeLine').textContent = s.regime || '-';
-      document.getElementById('globalTrendLine').textContent = 'Global trend 1H: ' + (f.global_trend_1h || meta.global_trend_1h || '-');
-      document.getElementById('strengthLine').textContent = s.strength || '-';
+        const conf = Number(s.confidence || 0);
+        setText('confidenceBig', conf.toFixed(1) + '%');
+        setBar('confidenceBar', conf);
 
-      const conf = Number(s.confidence || 0);
-      document.getElementById('confidenceBig').textContent = fmt(conf,1)+'%';
-      document.getElementById('confidenceBar').style.width = Math.max(2, conf) + '%';
+        const sec = Number(s.seconds_left || 0);
+        setText('countdown', `${Math.floor(sec/60)}:${String(Math.floor(sec%60)).padStart(2,'0')}`);
 
-      const sec = Number(s.seconds_left || 0);
-      const mm = Math.floor(sec/60);
-      const ss = Math.floor(sec%60);
-      document.getElementById('countdown').textContent = `${mm}:${String(ss).padStart(2,'0')}`;
+        setText('targetCandle', cutTime(s.target_open_utc, true));
+        setText('createdAt', cutTime(s.generated_at, false));
+        setText('directionVal', s.direction || '-');
+        setText('ruleConf', fmt(s.rule_conf, 1) + '%');
+        setText('aiConf', fmt(s.ai_conf, 1) + '%');
+        setText('aiDirVal', s.ai_direction || meta.ai_direction || '-');
+        setText('scoreValue', fmt(s.score, 2));
+        setText('globalTrendLine', f.global_trend_1h || meta.global_trend_1h || '-');
+        setText('globalBiasLine', f.global_bias_15m || meta.global_bias_15m || '-');
 
-      document.getElementById('targetCandle').textContent = s.target_open_utc || '-';
-      document.getElementById('generatedAt').textContent = s.generated_at || '-';
-      document.getElementById('ruleConf').textContent = s.rule_conf !== undefined ? fmt(s.rule_conf,1)+'%' : '-';
-      document.getElementById('aiConf').textContent = s.ai_conf !== undefined ? fmt(s.ai_conf,1)+'%' : '-';
-      document.getElementById('aiDir').textContent = s.ai_direction || meta.ai_direction || '-';
-      document.getElementById('decisionVal').textContent = s.decision || meta.decision || '-';
-      document.getElementById('sizeModeVal').textContent = s.size_mode || meta.size_mode || '-';
-      document.getElementById('riskLabelVal').textContent = s.risk_label || meta.risk_label || '-';
-      document.getElementById('riskScoreVal').textContent = s.risk_score !== undefined ? fmt(s.risk_score,2) : (meta.risk_score !== undefined ? fmt(meta.risk_score,2) : '-');
-      document.getElementById('scoreValue').textContent = fmt(s.score,2);
+        const buyPct = Number(f.buy_pct ?? 50);
+        const sellPct = Number(f.sell_pct ?? (100 - buyPct));
+        setText('buyPctVal', fmt(buyPct,1) + '%');
+        setText('sellPctVal', fmt(sellPct,1) + '%');
+        setBar('buyPctBar', buyPct);
+        setBar('sellPctBar', sellPct);
 
-      const buyPct = Number(f.buy_pct || 0);
-      const sellPct = Number(f.sell_pct || 0);
-      document.getElementById('buyPctVal').textContent = fmt(buyPct,1)+'%';
-      document.getElementById('sellPctVal').textContent = fmt(sellPct,1)+'%';
-      document.getElementById('buyPctBar').style.width = buyPct+'%';
-      document.getElementById('sellPctBar').style.width = sellPct+'%';
-      document.getElementById('tradesCount').textContent = f.trades_count ?? '-';
-      document.getElementById('buyQty').textContent = fmt(f.buy_qty,4);
-      document.getElementById('sellQty').textContent = fmt(f.sell_qty,4);
-      document.getElementById('flowBias').textContent = flowBias(buyPct,sellPct);
-
-      const w60 = f.w60 || {};
-      const w30 = f.w30 || {};
-      const w10 = f.w10 || {};
-      const w3 = f.w3 || {};
-      document.getElementById('windowState').textContent =
-        `${fmt(w60.buy_pct ?? 50,0)} / ${fmt(w30.buy_pct ?? 50,0)} / ${fmt(w10.buy_pct ?? 50,0)} / ${fmt(w3.buy_pct ?? 50,0)}`;
-      document.getElementById('aggrState').textContent =
-        `${fmt(f.aggr_buy_pct,0)} / ${fmt(f.aggr_sell_pct,0)}`;
-
-      const imbSigned = Number(f.imbalance || 0);
-      const imbPct = Number(f.imbalance_pct || 50);
-      const ratio = Number(f.bid_ask_ratio || 0);
-      document.getElementById('imbalanceVal').textContent = fmt(imbSigned,3)+' / '+fmt(imbPct,1)+'%';
-      document.getElementById('ratioVal').textContent = `${fmt(f.bid_vol,2)} / ${fmt(f.ask_vol,2)} | ${fmt(ratio,2)}`;
-      document.getElementById('imbalanceBar').style.width = Math.max(2,imbPct)+'%';
-      document.getElementById('ratioBar').style.width = Math.max(2,Math.min(100,ratio*16))+'%';
-      document.getElementById('bidVol').textContent = fmt(f.bid_vol,2);
-      document.getElementById('askVol').textContent = fmt(f.ask_vol,2);
-      document.getElementById('levelsVal').textContent = f.levels ?? '-';
-      document.getElementById('lastPrice').textContent = fmt(f.last_price,2);
-      document.getElementById('microBiasVal').textContent = f.micro_bias_bps !== undefined ? fmt(f.micro_bias_bps,2)+' bps' : '-';
-
-      let wallsText='-';
-      if(f.bid_wall_active || f.ask_wall_active){
-        const bidPart = f.bid_wall_active ? `BID ${f.bid_wall_price}` : '';
-        const askPart = f.ask_wall_active ? `ASK ${f.ask_wall_price}` : '';
-        wallsText = [bidPart,askPart].filter(Boolean).join(' | ');
-      }
-      document.getElementById('wallsVal').textContent = wallsText;
-
-      const cumDelta = Number(f.cum_delta || 0);
-      document.getElementById('cumDeltaVal').textContent = fmt(cumDelta,4);
-      document.getElementById('lastDeltaVal').textContent = fmt((w10.cum_delta ?? f.cum_delta ?? 0),4);
-      document.getElementById('deltaStrengthVal').textContent = fmt(Number(f.slope || 0),4);
-      document.getElementById('deltaStrengthBar').style.width = Math.max(2,signedBar(f.slope || 0,2))+'%';
-      document.getElementById('trendBothVal').textContent = `${f.delta_trend_7 || '-'} / ${f.delta_trend_20 || '-'}`;
-      document.getElementById('divergenceVal').textContent = f.divergence || '-';
-      document.getElementById('liveRegimeVal').textContent = f.regime_live || meta.regime_type || '-';
-      document.getElementById('globalTrendVal').textContent = f.global_trend_1h || meta.global_trend_1h || '-';
-      document.getElementById('globalBiasVal').textContent = f.global_bias_15m || meta.global_bias_15m || '-';
-      document.getElementById('sweepVal').textContent = `${f.liquidity_sweep || meta.liquidity_sweep || 'NONE'} / ${f.liquidity_sweep_dir || meta.liquidity_sweep_dir || 'NONE'}`;
-
-      document.getElementById('statTotal').textContent = stats.total ?? 0;
-      document.getElementById('statWins').textContent = stats.wins ?? 0;
-      document.getElementById('statWinrate').textContent = fmt(stats.winrate || 0,1)+'%';
-      document.getElementById('scoreMini').textContent = fmt(s.score || 0,2);
-      document.getElementById('overallWrText').textContent = fmt(stats.winrate || 0,1)+'%';
-      document.getElementById('overallWrBar').style.width = Math.max(2,Number(stats.winrate || 0))+'%';
-      document.getElementById('aiSamples').textContent = meta.ai_samples ?? '-';
-      document.getElementById('aiLiveDir').textContent = meta.ai_direction ?? '-';
-      document.getElementById('aiLiveConf').textContent = meta.ai_confidence !== undefined ? fmt(meta.ai_confidence,1)+'%' : '-';
-      document.getElementById('statUpWr').textContent = fmt(stats.up_wr || 0,1)+'%';
-      document.getElementById('statDownWr').textContent = fmt(stats.down_wr || 0,1)+'%';
-
-      const last15 = stats.last15 || [];
-      const last15El = document.getElementById('last15');
-      last15El.innerHTML = '';
-      let last15Wins = 0;
-      let last15Resolved = 0;
-
-      last15.forEach(item=>{
-        const div=document.createElement('div');
-        const r=item.result || 'PENDING';
-        div.className='dot '+(
-          r==='WIN' ? 'win' :
-          r==='LOSS' ? 'loss' :
-          r==='SKIP' ? 'skip' : 'pending'
+        setText('tradesCount', f.trades_count ?? '-');
+        setText('buyQtyVal', fmt(f.buy_qty, 4));
+        setText('sellQtyVal', fmt(f.sell_qty, 4));
+        setText('flowBias', buyPct >= 55 ? 'BUY' : sellPct >= 55 ? 'SELL' : 'MIXED');
+        setText('aggrState', `${fmt(f.aggr_buy_pct,0)}% / ${fmt(f.aggr_sell_pct,0)}%`);
+        setText('flowMomentumVal', fmt(f.flow_momentum, 2));
+        setText(
+          'windowState',
+          `${fmt(f.w60?.buy_pct,0)} / ${fmt(f.w30?.buy_pct,0)} / ${fmt(f.w10?.buy_pct,0)} / ${fmt(f.w3?.buy_pct,0)}`
         );
-        div.textContent = r==='WIN' ? '✓' : r==='LOSS' ? '✕' : r==='SKIP' ? '–' : '•';
-        last15El.appendChild(div);
-        if(r==='WIN' || r==='LOSS'){
-          last15Resolved++;
-          if(r==='WIN') last15Wins++;
+
+        const imbPct = Number(f.imbalance_pct ?? 50);
+        setText('imbalanceVal', fmt(f.imbalance, 3));
+        setBar('imbalanceBar', imbPct);
+
+        const ratio = Number(f.bid_ask_ratio ?? 1);
+        setText('ratioVal', fmt(ratio, 2));
+        setBar('ratioBar', Math.min(100, ratio * 25));
+
+        setText('bidVol', fmt(f.bid_vol, 2));
+        setText('askVol', fmt(f.ask_vol, 2));
+        setText('microBiasVal', fmt(f.micro_bias_bps, 2) + ' bps');
+        setText('levelsVal', f.levels ?? '-');
+        setText('lastPrice', fmt(f.last_price, 2));
+
+        let walls = [];
+        if(f.bid_wall_active) walls.push('BID');
+        if(f.ask_wall_active) walls.push('ASK');
+        setText('wallsVal', walls.length ? walls.join(' / ') : 'NONE');
+
+        const slope = Number(f.slope ?? 0);
+        setText('deltaStrengthVal', fmt(slope, 4));
+        setBar('deltaStrengthBar', Math.min(100, Math.abs(slope) * 60));
+
+        setText('cumDeltaVal', fmt(f.cum_delta, 4));
+        setText('trendBothVal', `${f.delta_trend_7 || '-'} / ${f.delta_trend_20 || '-'}`);
+        setText('divergenceVal', f.divergence || 'NONE');
+        setText('liveRegimeVal', f.regime_live || '-');
+        setText(
+          'liqSweepVal',
+          `${f.liquidity_sweep || 'NONE'}${f.liquidity_sweep_dir && f.liquidity_sweep_dir !== 'NONE' ? ' / ' + f.liquidity_sweep_dir : ''}`
+        );
+
+        const upTotal = Number(stats.up_total || 0);
+        const upWins = Number(stats.up_wins || 0);
+        const downTotal = Number(stats.down_total || 0);
+        const downWins = Number(stats.down_wins || 0);
+
+        const total = upTotal + downTotal;
+        const wins = upWins + downWins;
+        const wrTotal = Number(stats.winrate_total || 0);
+
+        setText('statTotal', total);
+        setText('statWins', wins);
+        setText('statWinrate', fmt(wrTotal,1) + '%');
+        setText('overallWrText', fmt(wrTotal,1) + '%');
+        setBar('overallWrBar', wrTotal);
+        setText('scoreMini', fmt(s.score, 2));
+        setText('upWrVal', fmt(stats.winrate_up,1) + '%');
+        setText('downWrVal', fmt(stats.winrate_down,1) + '%');
+        setText('pendingVal', (stats.pending_queue || []).length);
+
+        const dots = document.getElementById('last15');
+        dots.innerHTML = '';
+        (stats.last_15 || []).forEach(v => {
+          const d = document.createElement('div');
+          if(v === '+'){
+            d.className = 'dot win';
+            d.textContent = '✓';
+          }else if(v === '-'){
+            d.className = 'dot loss';
+            d.textContent = '✕';
+          }else{
+            d.className = 'dot pending';
+            d.textContent = '•';
+          }
+          dots.appendChild(d);
+        });
+
+        setText('volatilityVal', f.volatility_label || '-');
+        setText('liquidityVal', f.liquidity_state || '-');
+        setText('smartMoneyVal', f.smart_money_hint || '-');
+        setText('trapSpoofVal', `${f.liquidity_trap || '-'} / ${f.spoof_risk || '-'}`);
+        setText('absorptionVal', f.absorption || '-');
+        setText('tapePressureVal', f.tape_pressure || '-');
+        setText('fakeBreakoutVal', f.fake_breakout_risk || '-');
+        setText('agreementVal', f.agreement_label || '-');
+
+        const reasonsList = document.getElementById('reasonsList');
+        reasonsList.innerHTML = '';
+        (s.reasons || []).forEach(r => {
+          const li = document.createElement('li');
+          li.textContent = r;
+          reasonsList.appendChild(li);
+        });
+        if(!(s.reasons || []).length){
+          const li = document.createElement('li');
+          li.textContent = 'Ожидание сигналов...';
+          reasonsList.appendChild(li);
         }
-      });
 
-      const last15Pct = last15Resolved ? (last15Wins/last15Resolved*100) : 0;
-      document.getElementById('last15Summary').textContent =
-        `${last15Wins}/${last15Resolved || last15.length} wins in last 15 (${fmt(last15Pct,1)}%)`;
+        const tbody = document.getElementById('historyBody');
+        tbody.innerHTML = '';
+        history.forEach(h => {
+          const tr = document.createElement('tr');
+          const sig = String(h.signal || '-').toUpperCase();
+          const sigCls = signalClass(sig);
 
-      document.getElementById('volatilityVal').textContent = f.volatility_label || '-';
-      document.getElementById('liquidityVal').textContent = f.liquidity_state || '-';
-      document.getElementById('smartMoneyVal').textContent = f.smart_money_hint || '-';
-      document.getElementById('trapSpoofVal').textContent = `${f.liquidity_trap || '-'} / ${f.spoof_risk || '-'}`;
-      document.getElementById('agreementVal').textContent = f.agreement_label || '-';
-      document.getElementById('flowMomentumVal').textContent = typeof f.flow_momentum === 'number' ? fmt(f.flow_momentum,1) : (f.flow_momentum || '-');
-      document.getElementById('tapePressureVal').textContent = f.tape_pressure || '-';
-      document.getElementById('marketSpeedVal').textContent = f.market_speed || '-';
-      document.getElementById('absorptionVal').textContent = f.absorption || '-';
-      document.getElementById('fakeBreakoutVal').textContent = f.fake_breakout_risk || '-';
+          let resultCls = 'result-pending';
+          if(h.result === 'WIN') resultCls = 'result-win';
+          else if(h.result === 'LOSS') resultCls = 'result-loss';
+          else if(h.result === 'SKIP') resultCls = 'result-skip';
 
-      const reasons = s.reasons || [];
-      const reasonsList = document.getElementById('reasonsList');
-      reasonsList.innerHTML = '';
-      reasons.forEach(r=>{
-        const li=document.createElement('li');
-        li.textContent=r;
-        reasonsList.appendChild(li);
-      });
+          tr.innerHTML = `
+            <td>${cutTime(h.signal_time, false)}</td>
+            <td>${cutTime(h.target_candle, true)}</td>
+            <td><span class="tag ${sigCls}">${sig}</span></td>
+            <td>${h.status || '-'}</td>
+            <td>${h.regime || '-'}</td>
+            <td>${fmt(h.confidence,1)}%</td>
+            <td>${fmt(h.score,2)}</td>
+            <td>${fmt(h.buy_pct,1)}%</td>
+            <td>${fmt(h.cum_delta,3)}</td>
+            <td>${fmt(h.open,2)}</td>
+            <td>${fmt(h.close,2)}</td>
+            <td>${h.actual || '-'}</td>
+            <td class="${resultCls}">${h.result || '-'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
 
-      const tbody = document.getElementById('historyBody');
-      tbody.innerHTML = '';
-      history.forEach(row=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.signal_time || '-'}</td>
-          <td>${row.target_candle || '-'}</td>
-          <td><span class="tag ${tagClass((row.display_signal || row.signal || '').toUpperCase())}">${row.display_signal || row.signal || '-'}</span></td>
-          <td>${row.status ?? '-'}</td>
-          <td>${row.regime ?? '-'}</td>
-          <td>${row.strength ?? '-'}</td>
-          <td>${row.confidence ?? '-'}</td>
-          <td>${row.decision ?? '-'}</td>
-          <td>${row.risk_label ?? row.risk_score ?? '-'}</td>
-          <td>${row.buy_pct ?? '-'}</td>
-          <td>${row.imbalance ?? '-'}</td>
-          <td>${row.cum_delta ?? '-'}</td>
-          <td>${row.open ?? '-'}</td>
-          <td>${row.close ?? '-'}</td>
-          <td>${row.actual ?? '-'}</td>
-          <td class="${resultClass(row.result)}">${row.result ?? '-'}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      }catch(e){
+        console.log('refresh error', e);
+      }
     }
 
+    setInterval(setClock, 1000);
+    setInterval(refresh, 1000);
     setClock();
     refresh();
-    setInterval(setClock,1000);
-    setInterval(refresh,1000);
   </script>
 </body>
 </html>

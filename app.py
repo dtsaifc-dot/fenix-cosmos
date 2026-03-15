@@ -10,8 +10,6 @@ from flask import Flask, jsonify, render_template, make_response
 from collector_binance import BinanceState, run_binance_collectors
 from config import DASHBOARD_FILE, SIGNAL_FILE, HISTORY_FILE, ENTRY_LEAD_SEC, HIDE_SIGNAL_SEC
 from features import build_features
-from regime_detector import detect_regime
-from risk_engine import evaluate_risk
 from signal_engine import (
     build_signal,
     should_lock_signal,
@@ -47,13 +45,11 @@ state = BinanceState()
 
 dashboard_cache = {
     "features_live": {},
-    "regime_live": {},
-    "risk_live": {},
     "signal_locked": {},
     "signal_preview": {},
     "history": [],
     "stats": {},
-    "meta": {}
+    "meta": {},
 }
 
 lock = threading.Lock()
@@ -103,19 +99,44 @@ def compute_stats(hist):
     up_rows = [x for x in resolved if x.get("signal") == "UP"]
     down_rows = [x for x in resolved if x.get("signal") == "DOWN"]
 
-    up_wr = (sum(1 for x in up_rows if x["result"] == "WIN") / len(up_rows) * 100.0) if up_rows else 0.0
-    down_wr = (sum(1 for x in down_rows if x["result"] == "WIN") / len(down_rows) * 100.0) if down_rows else 0.0
+    up_wins = sum(1 for x in up_rows if x["result"] == "WIN")
+    down_wins = sum(1 for x in down_rows if x["result"] == "WIN")
+
+    up_wr = (up_wins / len(up_rows) * 100.0) if up_rows else 0.0
+    down_wr = (down_wins / len(down_rows) * 100.0) if down_rows else 0.0
     overall_wr = (wins / len(resolved) * 100.0) if resolved else 0.0
 
+    last_15 = []
+    for x in hist:
+        if x.get("result") == "WIN":
+            last_15.append("+")
+        elif x.get("result") == "LOSS":
+            last_15.append("-")
+        if len(last_15) >= 15:
+            break
+
+    pending_queue = []
+    for x in hist:
+        if x.get("result") == "PENDING":
+            pending_queue.append({
+                "signal": x.get("signal"),
+                "open": x.get("open"),
+                "conf": x.get("confidence"),
+                "record_ts": x.get("signal_time"),
+                "next_candle_open_ts": x.get("target_candle"),
+            })
+
     return {
-        "total": len(hist),
-        "resolved": len(resolved),
-        "wins": wins,
-        "losses": sum(1 for x in resolved if x["result"] == "LOSS"),
-        "up_wr": round(up_wr, 1),
-        "down_wr": round(down_wr, 1),
-        "winrate": round(overall_wr, 1),
-        "last15": hist[:15]
+        "up_total": len(up_rows),
+        "up_wins": up_wins,
+        "down_total": len(down_rows),
+        "down_wins": down_wins,
+        "last_15": last_15,
+        "pending_queue": pending_queue,
+        "pending": pending_queue[0] if pending_queue else None,
+        "winrate_up": round(up_wr, 1),
+        "winrate_down": round(down_wr, 1),
+        "winrate_total": round(overall_wr, 1),
     }
 
 
@@ -131,40 +152,35 @@ def classify_strength(confidence, status):
     return "WEAK"
 
 
-def enrich_signal(sig, phase, next_open, now, risk_block=None, regime_block=None):
-    out = dict(sig)
-
-    out.setdefault("display_signal", "COLLECTING")
-    out.setdefault("direction", "UP")
-    out.setdefault("status", "LIVE STATE")
-    out.setdefault("regime", "-")
-    out.setdefault("confidence", 50.0)
-    out.setdefault("score", 0.0)
-    out.setdefault("generated_at", now.isoformat())
-    out.setdefault("target_open_utc", next_open)
-    out.setdefault("reasons", [])
-
-    out["seconds_left"] = round(seconds_to_next_5m(now), 1)
-    out["phase"] = phase
-
-    out.setdefault("rule_conf", out.get("confidence", 50.0))
-    out.setdefault("ai_conf", 50.0)
-    out.setdefault("ai_direction", out.get("direction", "UP"))
-    out["strength"] = classify_strength(out.get("confidence", 50.0), out.get("status", "LIVE STATE"))
-
-    if regime_block:
-        out["regime_type"] = regime_block.get("regime_type", "-")
-        out["regime_confidence"] = regime_block.get("regime_confidence", 0.0)
-        out["regime_direction"] = regime_block.get("regime_direction", "NEUTRAL")
-
-    if risk_block:
-        out["decision"] = risk_block.get("decision", "WATCH")
-        out["size_mode"] = risk_block.get("size_mode", "MICRO")
-        out["risk_label"] = risk_block.get("risk_label", "C")
-        out["risk_score"] = risk_block.get("risk_score", 0.0)
-        out["risk_reasons"] = risk_block.get("risk_reasons", [])
-
-    return out
+def build_preview_ui(signal_obj, features_live, ai_pred, now, next_open, phase):
+    return {
+        "display_signal": signal_obj.get("display_signal", "COLLECTING"),
+        "direction": signal_obj.get("direction", "-"),
+        "status": signal_obj.get("status", "LIVE STATE"),
+        "regime": signal_obj.get("regime", features_live.get("regime_live", "-")),
+        "confidence": signal_obj.get("confidence", 50.0),
+        "score": signal_obj.get("score", 0.0),
+        "generated_at": signal_obj.get("generated_at", now.isoformat()),
+        "target_open_utc": next_open,
+        "seconds_left": round(seconds_to_next_5m(now), 1),
+        "phase": phase,
+        "reasons": signal_obj.get("reasons", []),
+        "rule_conf": signal_obj.get("rule_conf", signal_obj.get("confidence", 50.0)),
+        "ai_conf": signal_obj.get("ai_conf", ai_pred.get("confidence", 50.0)),
+        "ai_direction": signal_obj.get("ai_direction", ai_pred.get("direction", "-")),
+        "strength": classify_strength(
+            signal_obj.get("confidence", 50.0),
+            signal_obj.get("status", "LIVE STATE"),
+        ),
+        "decision": signal_obj.get("status", "WATCH"),
+        "size_mode": None,
+        "risk_label": None,
+        "risk_score": None,
+        "risk_reasons": [],
+        "regime_type": features_live.get("regime_live", "-"),
+        "regime_confidence": 0.0,
+        "regime_direction": features_live.get("global_trend_1h", "NEUTRAL"),
+    }
 
 
 def on_new_candle_start(current_open_iso, current_price):
@@ -182,7 +198,7 @@ def on_new_candle_start(current_open_iso, current_price):
             actual = direction_from_open_close(row["open"], close_price)
             row["actual"] = actual
 
-            if row.get("status") == "NO TRADE" or row.get("decision") == "NO TRADE":
+            if row.get("status") == "NO TRADE":
                 row["result"] = "SKIP"
             else:
                 row["result"] = "WIN" if actual == row.get("signal") else "LOSS"
@@ -239,53 +255,26 @@ def engine_thread():
                     "samples": 0,
                 }
 
-            regime_live = detect_regime(features_live)
             preview_signal = build_signal(features_live, ai_pred)
-            risk_live = evaluate_risk(preview_signal, features_live, regime_live)
-
-            preview_signal = enrich_signal(
-                preview_signal,
-                phase,
-                next_open,
-                now,
-                risk_block=risk_live,
-                regime_block=regime_live,
-            )
+            preview_ui = build_preview_ui(preview_signal, features_live, ai_pred, now, next_open, phase)
 
             if current_locked is None:
-                locked_ui = {
-                    "display_signal": "COLLECTING" if phase == "LIVE" else "PREPARE",
-                    "direction": "-",
-                    "status": "COLLECTING DATA" if phase == "LIVE" else "LOCK WINDOW",
-                    "regime": preview_signal.get("regime", "-"),
-                    "confidence": preview_signal.get("confidence", 50.0),
-                    "score": preview_signal.get("score", 0.0),
-                    "generated_at": preview_signal.get("generated_at", now.isoformat()),
-                    "target_open_utc": next_open,
-                    "seconds_left": round(seconds_to_next_5m(now), 1),
-                    "reasons": preview_signal.get("reasons", []),
-                    "rule_conf": preview_signal.get("rule_conf", 50.0),
-                    "ai_conf": preview_signal.get("ai_conf", 50.0),
-                    "ai_direction": preview_signal.get("ai_direction", "-"),
-                    "strength": classify_strength(
-                        preview_signal.get("confidence", 50.0),
-                        preview_signal.get("status", "LIVE STATE"),
-                    ),
-                    "decision": risk_live.get("decision", "WATCH"),
-                    "size_mode": risk_live.get("size_mode", "MICRO"),
-                    "risk_label": risk_live.get("risk_label", "C"),
-                    "risk_score": risk_live.get("risk_score", 0.0),
-                    "risk_reasons": risk_live.get("risk_reasons", []),
-                    "regime_type": regime_live.get("regime_type", "-"),
-                    "regime_confidence": regime_live.get("regime_confidence", 0.0),
-                    "regime_direction": regime_live.get("regime_direction", "NEUTRAL"),
-                }
+                locked_ui = dict(preview_ui)
+
+                if phase == "LIVE":
+                    locked_ui["display_signal"] = "COLLECTING"
+                    locked_ui["direction"] = "-"
+                    locked_ui["status"] = "COLLECTING DATA"
+                elif phase == "PREPARE":
+                    locked_ui["display_signal"] = "PREPARE"
+                    locked_ui["direction"] = preview_ui.get("direction", "-")
+                    locked_ui["status"] = "LOCK WINDOW"
             else:
                 locked_ui = dict(current_locked)
 
             if should_lock_signal(now, ENTRY_LEAD_SEC):
                 if locked_target != next_open:
-                    current_locked = dict(preview_signal)
+                    current_locked = dict(preview_ui)
                     current_locked["generated_at"] = now.isoformat()
                     current_locked["target_open_utc"] = next_open
                     current_locked["seconds_left"] = round(seconds_to_next_5m(now), 1)
@@ -307,10 +296,10 @@ def engine_thread():
                         "strength": current_locked.get("strength"),
                         "confidence": current_locked.get("confidence"),
                         "score": current_locked.get("score"),
-                        "decision": current_locked.get("decision"),
-                        "size_mode": current_locked.get("size_mode"),
-                        "risk_label": current_locked.get("risk_label"),
-                        "risk_score": current_locked.get("risk_score"),
+                        "decision": current_locked.get("status"),
+                        "size_mode": None,
+                        "risk_label": None,
+                        "risk_score": None,
                         "buy_pct": (
                             features_live["w10"]["buy_pct"]
                             if "w10" in features_live and isinstance(features_live["w10"], dict)
@@ -325,7 +314,7 @@ def engine_thread():
                         "open": None,
                         "close": None,
                         "actual": None,
-                        "result": "PENDING" if current_locked.get("decision") != "NO TRADE" else "SKIP",
+                        "result": "PENDING" if current_locked.get("status") != "NO TRADE" else "SKIP",
                         "feature_snapshot": ai_pred.get("vector", {}) if ai_pred else {},
                         "ai_trained": False,
                     })
@@ -335,6 +324,7 @@ def engine_thread():
 
             if current_locked is not None:
                 current_locked["seconds_left"] = round(seconds_to_next_5m(now), 1)
+                current_locked["phase"] = phase
                 locked_ui = dict(current_locked)
 
             if locked_target and current_open == locked_target and phase == "LIVE":
@@ -345,9 +335,7 @@ def engine_thread():
 
             with lock:
                 dashboard_cache["features_live"] = features_live
-                dashboard_cache["regime_live"] = regime_live
-                dashboard_cache["risk_live"] = risk_live
-                dashboard_cache["signal_preview"] = preview_signal
+                dashboard_cache["signal_preview"] = preview_ui
                 dashboard_cache["signal_locked"] = locked_ui
                 dashboard_cache["history"] = history
                 dashboard_cache["stats"] = stats
@@ -361,12 +349,10 @@ def engine_thread():
                     "ai_samples": ai_pred.get("samples", 0) if ai_pred else 0,
                     "ai_direction": ai_pred.get("direction", "-") if ai_pred else "-",
                     "ai_confidence": ai_pred.get("confidence", 50.0) if ai_pred else 50.0,
-                    "regime_type": regime_live.get("regime_type", "-"),
-                    "regime_confidence": regime_live.get("regime_confidence", 0.0),
-                    "decision": risk_live.get("decision", "WATCH"),
-                    "size_mode": risk_live.get("size_mode", "MICRO"),
-                    "risk_label": risk_live.get("risk_label", "C"),
-                    "risk_score": risk_live.get("risk_score", 0.0),
+                    "decision": preview_ui.get("status", "WATCH"),
+                    "size_mode": None,
+                    "risk_label": None,
+                    "risk_score": None,
                     "global_trend_1h": features_live.get("global_trend_1h", "-"),
                     "global_bias_15m": features_live.get("global_bias_15m", "-"),
                     "liquidity_sweep": features_live.get("liquidity_sweep", "NONE"),

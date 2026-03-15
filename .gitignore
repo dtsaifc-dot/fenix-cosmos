@@ -15,3 +15,10 @@ ai_state.json
 .env.*
 
 .DS_Store
+venv/
+__pycache__/
+*.log
+dashboard_data.json
+signal.json
+signals_history.json
+fenix_error.log
