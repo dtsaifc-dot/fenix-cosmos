@@ -1,0 +1,4 @@
+flask
+websockets
+requests
+numpy
